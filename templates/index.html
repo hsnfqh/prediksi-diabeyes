@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediksi & Analisis Risiko Diabetes</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --risk-high: #ef4444;
+            --risk-high-bg: #fef2f2;
+            --risk-low: #10b981;
+            --risk-low-bg: #ecfdf5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 16px;
+            color: var(--text-main);
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            max-width: 650px;
+            width: 100%;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: #eff6ff;
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            color: #0f172a;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #0f172a;
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+        }
+
+        .input-hint {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.5);
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px 0;
+            color: var(--primary);
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #b91c1c;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-top: 24px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        /* Result Section */
+        .result-card {
+            margin-top: 32px;
+            padding: 28px;
+            border-radius: 20px;
+            display: none;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .result-card.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-card.berisiko {
+            background: var(--risk-high-bg);
+            border: 2px solid #fecaca;
+        }
+
+        .result-card.rendah {
+            background: var(--risk-low-bg);
+            border: 2px solid #a7f3d0;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .berisiko .result-badge {
+            background: #ef4444;
+            color: white;
+        }
+
+        .rendah .result-badge {
+            background: #10b981;
+            color: white;
+        }
+
+        /* Single Meter Gauge */
+        .meter-box {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .meter-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .meter-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .meter-val {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .berisiko .meter-val {
+            color: #dc2626;
+        }
+
+        .rendah .meter-val {
+            color: #059669;
+        }
+
+        .meter-bar-bg {
+            width: 100%;
+            height: 14px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .meter-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .berisiko .meter-bar-fill {
+            background: linear-gradient(90deg, #f59e0b 0%, #ef4444 100%);
+        }
+
+        .rendah .meter-bar-fill {
+            background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+        }
+
+        /* Summary Text */
+        .summary-box {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #334155;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 16px 20px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .berisiko .summary-box {
+            border-left-color: #ef4444;
+        }
+
+        .rendah .summary-box {
+            border-left-color: #10b981;
+        }
+
+        /* Recommendations Section */
+        .recom-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recom-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .recom-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: #ffffff;
+            padding: 14px 18px;
+            border-radius: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            text-align: left;
+        }
+
+        .recom-icon {
+            font-size: 22px;
+            line-height: 1;
+            padding: 8px;
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .recom-content {
+            flex: 1;
+        }
+
+        .recom-content-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .recom-content-desc {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.45;
+        }
+
+        .btn-reset {
+            width: 100%;
+            padding: 12px;
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-reset:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 24px 18px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-badge"> AI Health Analytics</div>
+            <h1>Prediksi Risiko Diabetes</h1>
+            <p>Masukkan data indikator kesehatan Anda untuk analisis dan rekomendasi</p>
+        </div>
+
+        <form id="predictionForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="usia"> Usia (Tahun)</label>
+                    <input type="number" id="usia" name="usia" min="18" max="100" value="30" required>
+                    <span class="input-hint">Rentang: 18 - 100 tahun</span>
+                </div>
+                <div class="form-group">
+                    <label for="berat_badan"> Berat Badan (kg)</label>
+                    <input type="number" id="berat_badan" name="berat_badan" min="30" max="200" value="66" required>
+                    <span class="input-hint">Dalam kilogram</span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="olahraga"> Olahraga (x / minggu)</label>
+                    <input type="number" id="olahraga" name="olahraga" min="0" max="14" step="0.5" value="2" required>
+                    <span class="input-hint">Frekuensi sesi per minggu</span>
+                </div>
+                <div class="form-group">
+                    <label for="gula_harian"> Konsumsi Gula (gram/hari)</label>
+                    <input type="number" id="gula_harian" name="gula_harian" min="0" max="300" value="103" required>
+                    <span class="input-hint">Rata-rata asupan gula per hari</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-predict" id="btnSubmit">
+                <span> Analisis & Prediksi Sekarang</span>
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Sedang menganalisis indikator kesehatan Anda...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result-card" id="result">
+            <div class="result-header">
+                <div class="result-badge" id="resultBadge">
+                    <span id="badgeIcon"></span>
+                    <span id="badgeText"></span>
+                </div>
+            </div>
+
+            <!-- Single Meter Bar -->
+            <div class="meter-box">
+                <div class="meter-info">
+                    <span class="meter-label">Estimasi Tingkat Risiko Diabetes</span>
+                    <span class="meter-val" id="riskPercentage">0%</span>
+                </div>
+                <div class="meter-bar-bg">
+                    <div class="meter-bar-fill" id="meterFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Ringkasan Informatif -->
+            <div class="summary-box" id="summaryText"></div>
+
+            <!-- Rekomendasi Kesehatan -->
+            <div class="recom-title"> Rekomendasi Kesehatan Untuk Anda:</div>
+            <div class="recom-list" id="recomList"></div>
+
+            <button type="button" class="btn-reset" onclick="resetForm()"> Hitung Ulang / Reset Form</button>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const resultCard = document.getElementById('result');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            error.classList.remove('show');
+            resultCard.classList.remove('show', 'berisiko', 'rendah');
+            loading.classList.add('show');
+            btnSubmit.disabled = true;
+
+            try {
+                const formData = {
+                    usia: document.getElementById('usia').value,
+                    berat_badan: document.getElementById('berat_badan').value,
+                    olahraga: document.getElementById('olahraga').value,
+                    gula_harian: document.getElementById('gula_harian').value
+                };
+
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Terjadi kesalahan saat memproses prediksi');
+                }
+
+                loading.classList.remove('show');
+                btnSubmit.disabled = false;
+                displayResults(data);
+
+            } catch (err) {
+                loading.classList.remove('show');
+                btnSubmit.disabled = false;
+                showError(err.message);
+            }
+        });
+
+        function displayResults(data) {
+            const badgeIcon = document.getElementById('badgeIcon');
+            const badgeText = document.getElementById('badgeText');
+            const riskPercentage = document.getElementById('riskPercentage');
+            const meterFill = document.getElementById('meterFill');
+            const summaryText = document.getElementById('summaryText');
+            const recomList = document.getElementById('recomList');
+
+            // Apply theme class
+            resultCard.classList.remove('berisiko', 'rendah');
+            if (data.is_high_risk) {
+                resultCard.classList.add('berisiko');
+                badgeIcon.textContent = '';
+                badgeText.textContent = data.status_title || 'Berisiko Tinggi Diabetes';
+            } else {
+                resultCard.classList.add('rendah');
+                badgeIcon.textContent = '';
+                badgeText.textContent = data.status_title || 'Risiko Diabetes Rendah';
+            }
+
+            // Meter bar
+            const percent = data.risk_percentage || 0;
+            riskPercentage.textContent = percent.toFixed(1) + '%';
+            meterFill.style.width = percent + '%';
+
+            // Summary text
+            summaryText.textContent = data.summary_text;
+
+            // Recommendations
+            recomList.innerHTML = '';
+            if (data.recommendations && data.recommendations.length > 0) {
+                data.recommendations.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'recom-card';
+                    itemDiv.innerHTML = `
+                        <div class="recom-icon">${item.icon}</div>
+                        <div class="recom-content">
+                            <div class="recom-content-title">${item.title}</div>
+                            <div class="recom-content-desc">${item.desc}</div>
+                        </div>
+                    `;
+                    recomList.appendChild(itemDiv);
+                });
+            }
+
+            resultCard.classList.add('show');
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function showError(message) {
+            error.textContent = '❌ Error: ' + message;
+            error.classList.add('show');
+        }
+
+        function resetForm() {
+            form.reset();
+            resultCard.classList.remove('show', 'berisiko', 'rendah');
+            error.classList.remove('show');
+
+            document.getElementById('usia').value = '30';
+            document.getElementById('berat_badan').value = '66';
+            document.getElementById('olahraga').value = '2';
+            document.getElementById('gula_harian').value = '103';
+        }
+    </script>
+</body>
+
+</html>
